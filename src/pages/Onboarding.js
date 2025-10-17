@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { doc, setDoc, enableNetwork, disableNetwork } from 'firebase/firestore';
 import { db, auth } from '../firebase/config';
 import { useNavigate } from 'react-router-dom';
@@ -273,7 +273,17 @@ const Onboarding = () => {
   });
   const [isAnimating, setIsAnimating] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const navigate = useNavigate();
+
+  // Add loading effect to ensure component is ready
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setIsLoading(false);
+    }, 500); // Small delay to ensure smooth loading
+
+    return () => clearTimeout(timer);
+  }, []);
 
   const currentQuestion = questions[currentStep];
   const clarity = Math.min(100, (Object.values(formData).filter(v => v.trim()).length / questions.length) * 100);
@@ -327,6 +337,17 @@ const Onboarding = () => {
       }
     }
   };
+
+  if (isLoading) {
+    return (
+      <Container>
+        <div style={{ textAlign: 'center', color: 'white' }}>
+          <div style={{ fontSize: '2em', marginBottom: '20px' }}>🌙</div>
+          <div>Loading onboarding...</div>
+        </div>
+      </Container>
+    );
+  }
 
   return (
     <Container>

@@ -1,6 +1,6 @@
 import { initializeApp } from 'firebase/app';
 import { getAuth } from 'firebase/auth';
-import { getFirestore } from 'firebase/firestore';
+import { getFirestore, initializeFirestore, persistentLocalCache, persistentMultipleTabManager } from 'firebase/firestore';
 
 const firebaseConfig = {
   apiKey: process.env.REACT_APP_FIREBASE_API_KEY,
@@ -13,11 +13,27 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 export const auth = getAuth(app);
-export const db = getFirestore(app);
 
-// Disable Firestore persistence to avoid connection issues
-// This prevents the continuous reconnection attempts
-if (process.env.NODE_ENV === 'development') {
-  // In development, you might want to use emulator if available
-  // connectFirestoreEmulator(db, 'localhost', 8080);
+// Initialize Firestore with persistent cache and better error handling
+let db;
+try {
+  db = initializeFirestore(app, {
+    localCache: persistentLocalCache({
+      tabManager: persistentMultipleTabManager()
+    })
+  });
+} catch (error) {
+  console.warn('Failed to initialize Firestore with persistence, falling back to basic initialization:', error);
+  db = getFirestore(app);
 }
+
+export { db };
+
+// For development, you can uncomment to use emulator
+// if (process.env.NODE_ENV === 'development') {
+//   try {
+//     connectFirestoreEmulator(db, 'localhost', 8080);
+//   } catch (error) {
+//     console.warn('Failed to connect to Firestore emulator:', error);
+//   }
+// }

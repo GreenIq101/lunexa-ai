@@ -54,7 +54,19 @@ function App() {
 
       setLoading(false);
     });
-    return unsubscribe;
+
+    // Add a small delay to ensure Firebase is properly initialized
+    const timer = setTimeout(() => {
+      if (loading) {
+        console.warn('Firebase initialization taking longer than expected');
+        setLoading(false);
+      }
+    }, 10000); // 10 second timeout
+
+    return () => {
+      unsubscribe();
+      clearTimeout(timer);
+    };
   }, []);
 
   if (loading) {
