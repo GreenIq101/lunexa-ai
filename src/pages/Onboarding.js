@@ -381,7 +381,11 @@ const Onboarding = () => {
         <ClarityBar clarity={clarity} />
       </ClarityIndicator>
 
-      <Card key={currentStep} style={{ animation: isAnimating ? css`${slideOut} 0.3s ease-out` : css`${slideIn} 0.5s ease-out` }}>
+      <Card key={currentStep} style={{
+        animation: isAnimating
+          ? `${slideOut} 0.3s ease-out`
+          : `${slideIn} 0.5s ease-out`
+      }}>
         <div style={{ textAlign: 'center', marginBottom: '20px' }}>
           <span style={{ fontSize: '3em' }}>{currentQuestion.emoji}</span>
         </div>
