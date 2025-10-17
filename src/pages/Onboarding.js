@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { doc, setDoc, enableNetwork, disableNetwork } from 'firebase/firestore';
 import { db, auth } from '../firebase/config';
 import { useNavigate } from 'react-router-dom';
-import styled, { keyframes } from 'styled-components';
+import styled, { keyframes, css } from 'styled-components';
 
 const Container = styled.div`
   min-height: 100vh;
@@ -118,7 +118,7 @@ const Card = styled.div`
   padding: 40px;
   width: 100%;
   max-width: 500px;
-  animation: ${slideIn} 0.5s ease-out;
+  animation: ${css`${slideIn} 0.5s ease-out`};
   position: relative;
 `;
 
@@ -354,7 +354,7 @@ const Onboarding = () => {
         <ClarityBar clarity={clarity} />
       </ClarityIndicator>
 
-      <Card key={currentStep} style={{ animation: isAnimating ? `${slideOut} 0.3s ease-out` : `${slideIn} 0.5s ease-out` }}>
+      <Card key={currentStep} style={{ animation: isAnimating ? css`${slideOut} 0.3s ease-out` : css`${slideIn} 0.5s ease-out` }}>
         <div style={{ textAlign: 'center', marginBottom: '20px' }}>
           <span style={{ fontSize: '3em' }}>{currentQuestion.emoji}</span>
         </div>
