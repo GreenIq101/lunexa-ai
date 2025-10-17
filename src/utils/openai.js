@@ -41,7 +41,7 @@ Return as JSON with keys: title, description, hashtags, seo_keywords
       },
       mode: 'cors',
       body: JSON.stringify({
-        model: 'meta-llama/llama-3.1-8b-instruct:free',
+        model: 'microsoft/wizardlm-2-8x22b:free',
         messages: [{ role: 'user', content: prompt }],
         max_tokens: 500,
         temperature: 0.7,
