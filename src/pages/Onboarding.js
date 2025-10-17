@@ -318,8 +318,8 @@ const Onboarding = () => {
         } catch (disableError) {
           console.error('Error disabling network:', disableError);
         }
-        // Still navigate to dashboard even if save fails - user can retry later
-        alert('Profile setup completed! You can update your preferences later in settings.');
+        // For now, just navigate to dashboard - we'll handle offline mode
+        console.log('Saving failed, proceeding to dashboard anyway');
         navigate('/dashboard');
       } finally {
         setIsSubmitting(false);
