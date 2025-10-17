@@ -41,7 +41,7 @@ Return as JSON with keys: title, description, hashtags, seo_keywords
       },
       mode: 'cors',
       body: JSON.stringify({
-        model: 'microsoft/wizardlm-2-8x22b:free',
+        model: 'huggingface/zephyr-7b-beta:free',
         messages: [{ role: 'user', content: prompt }],
         max_tokens: 500,
         temperature: 0.7,
@@ -54,6 +54,8 @@ Return as JSON with keys: title, description, hashtags, seo_keywords
 
       if (response.status === 401) {
         throw new Error('Invalid API key. Please check your OpenRouter API key configuration.');
+      } else if (response.status === 404) {
+        throw new Error('Model not found or not available. Please try a different model or check OpenRouter status.');
       } else if (response.status === 429) {
         throw new Error('Rate limit exceeded. Please try again later.');
       } else if (response.status >= 500) {
