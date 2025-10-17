@@ -16,6 +16,7 @@ function App() {
   const [loading, setLoading] = React.useState(true);
   const [userProfile, setUserProfile] = React.useState(null);
   const [databaseError, setDatabaseError] = React.useState(false);
+  const [forceProfileCheck, setForceProfileCheck] = React.useState(0);
 
   React.useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
@@ -57,7 +58,12 @@ function App() {
       unsubscribe();
       clearTimeout(timer);
     };
-  }, []);
+  }, [forceProfileCheck]);
+
+  // Function to refresh profile check (called after onboarding completion)
+  const refreshProfile = () => {
+    setForceProfileCheck(prev => prev + 1);
+  };
 
   if (loading) {
     return (
@@ -99,7 +105,7 @@ function App() {
         <Route path="/" element={<Landing />} />
         <Route path="/login" element={user ? <Navigate to={userProfile ? "/dashboard" : "/onboarding"} /> : <Login />} />
         <Route path="/register" element={user ? <Navigate to={userProfile ? "/dashboard" : "/onboarding"} /> : <Register />} />
-        <Route path="/onboarding" element={user ? <Onboarding /> : <Navigate to="/login" />} />
+        <Route path="/onboarding" element={user ? <Onboarding onComplete={refreshProfile} /> : <Navigate to="/login" />} />
         <Route path="/dashboard" element={user && userProfile ? <Dashboard /> : <Navigate to={user ? "/onboarding" : "/login"} />} />
         <Route path="/settings" element={user && userProfile ? <Settings /> : <Navigate to={user ? "/onboarding" : "/login"} />} />
       </Routes>

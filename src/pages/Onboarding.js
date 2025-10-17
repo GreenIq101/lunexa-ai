@@ -250,7 +250,7 @@ const questions = [
   }
 ];
 
-const Onboarding = () => {
+const Onboarding = ({ onComplete }) => {
   const [currentStep, setCurrentStep] = useState(0);
   const [formData, setFormData] = useState({
     businessName: '',
@@ -308,6 +308,10 @@ const Onboarding = () => {
       try {
         const profileRef = ref(database, `profiles/${user.uid}`);
         await set(profileRef, formData);
+        // Call onComplete callback to refresh profile in App.js
+        if (onComplete) {
+          onComplete();
+        }
         navigate('/dashboard');
       } catch (error) {
         console.error('Error saving profile:', error);
