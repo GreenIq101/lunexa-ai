@@ -2,15 +2,113 @@ import React, { useState } from 'react';
 import { doc, setDoc } from 'firebase/firestore';
 import { db, auth } from '../firebase/config';
 import { useNavigate } from 'react-router-dom';
-import styled from 'styled-components';
+import styled, { keyframes } from 'styled-components';
 
 const Container = styled.div`
   min-height: 100vh;
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
   padding: 20px;
   background: var(--background-gradient);
+`;
+
+const Header = styled.div`
+  text-align: center;
+  margin-bottom: 30px;
+  color: white;
+`;
+
+const ProgressContainer = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  margin-bottom: 20px;
+`;
+
+const StepIndicator = styled.div`
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: ${props => props.active ? 'var(--secondary-color)' : props.completed ? '#4CAF50' : '#e0e0e0'};
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  transition: all 0.3s ease;
+`;
+
+const ProgressLine = styled.div`
+  height: 2px;
+  background: #e0e0e0;
+  flex: 1;
+  max-width: 50px;
+  position: relative;
+
+  &::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 100%;
+    background: var(--secondary-color);
+    width: ${props => props.progress}%;
+    transition: width 0.5s ease;
+  }
+`;
+
+const ClarityIndicator = styled.div`
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 20px;
+  padding: 10px 20px;
+  color: white;
+  font-size: 14px;
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+`;
+
+const ClarityBar = styled.div`
+  flex: 1;
+  height: 4px;
+  background: rgba(255, 255, 255, 0.3);
+  border-radius: 2px;
+  overflow: hidden;
+
+  &::after {
+    content: '';
+    display: block;
+    height: 100%;
+    background: linear-gradient(90deg, #FFD700, #FFA500);
+    width: ${props => props.clarity}%;
+    transition: width 0.5s ease;
+  }
+`;
+
+const slideIn = keyframes`
+  from {
+    opacity: 0;
+    transform: translateX(50px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+`;
+
+const slideOut = keyframes`
+  from {
+    opacity: 1;
+    transform: translateX(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateX(-50px);
+  }
 `;
 
 const Card = styled.div`
@@ -19,57 +117,60 @@ const Card = styled.div`
   box-shadow: var(--shadow);
   padding: 40px;
   width: 100%;
-  max-width: 600px;
+  max-width: 500px;
+  animation: ${slideIn} 0.5s ease-out;
+  position: relative;
 `;
 
-const Title = styled.h2`
+const QuestionTitle = styled.h2`
   color: var(--text-primary);
   text-align: center;
-  margin-bottom: 10px;
-  font-size: 2.5em;
+  margin-bottom: 15px;
+  font-size: 1.8em;
   font-weight: 700;
 `;
 
-const Subtitle = styled.p`
+const QuestionSubtitle = styled.p`
   color: #666;
   text-align: center;
   margin-bottom: 30px;
-  font-size: 1.1em;
+  font-size: 1em;
   line-height: 1.6;
 `;
 
-const ProgressBar = styled.div`
-  background: #e0e0e0;
-  border-radius: 10px;
-  height: 8px;
-  margin-bottom: 30px;
-  overflow: hidden;
-`;
-
-const ProgressFill = styled.div`
-  background: linear-gradient(90deg, var(--primary-color), var(--secondary-color));
-  height: 100%;
-  width: 100%;
-  border-radius: 10px;
-  transition: width 0.3s ease;
-`;
-
-const Form = styled.form`
+const ButtonGroup = styled.div`
   display: flex;
-  flex-direction: column;
-  gap: 20px;
+  gap: 15px;
+  margin-top: 30px;
+`;
+
+const NavButton = styled.button`
+  flex: 1;
+  padding: 12px 20px;
+  background: ${props => props.primary ? 'var(--secondary-color)' : 'transparent'};
+  color: ${props => props.primary ? 'white' : 'var(--secondary-color)'};
+  border: 2px solid var(--secondary-color);
+  border-radius: var(--border-radius);
+  font-size: 16px;
+  font-weight: 600;
+  font-family: 'Montserrat', sans-serif;
+  cursor: pointer;
+  transition: all 0.2s ease;
+
+  &:hover {
+    background: ${props => props.primary ? '#5a4fcf' : 'rgba(108, 92, 231, 0.1)'};
+    transform: translateY(-1px);
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+  }
 `;
 
 const InputGroup = styled.div`
   margin-bottom: 20px;
-`;
-
-const Label = styled.label`
-  display: block;
-  margin-bottom: 8px;
-  color: #333;
-  font-weight: 600;
-  font-size: 16px;
 `;
 
 const Input = styled.input`
@@ -91,38 +192,6 @@ const Input = styled.input`
   }
 `;
 
-const Button = styled.button`
-  width: 100%;
-  padding: 15px;
-  background: var(--secondary-color);
-  color: white;
-  border: none;
-  border-radius: var(--border-radius);
-  font-size: 18px;
-  font-weight: 600;
-  font-family: 'Montserrat', sans-serif;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  margin-top: 10px;
-
-  &:hover {
-    background: #5a4fcf;
-    transform: translateY(-2px);
-    box-shadow: 0 6px 12px rgba(108, 92, 231, 0.3);
-  }
-
-  &:active {
-    transform: scale(0.98);
-  }
-
-  &:disabled {
-    background: #ccc;
-    cursor: not-allowed;
-    transform: none;
-    box-shadow: none;
-  }
-`;
-
 const BackLink = styled.button`
   position: absolute;
   top: 20px;
@@ -141,7 +210,59 @@ const BackLink = styled.button`
   }
 `;
 
+const questions = [
+  {
+    id: 'businessName',
+    title: '🏢 What\'s Your Business Called?',
+    subtitle: 'Let\'s start with something simple - your business name!',
+    placeholder: 'e.g., Urban Threads, TechHub, GreenLife',
+    emoji: '🚀',
+    funFact: 'Great names are memorable and tell a story!'
+  },
+  {
+    id: 'category',
+    title: '📦 What Do You Sell?',
+    subtitle: 'Fashion, tech, food, or something totally unique?',
+    placeholder: 'e.g., Fashion & Apparel, Electronics, Home & Garden',
+    emoji: '🎯',
+    funFact: 'Your category helps us craft the perfect content!'
+  },
+  {
+    id: 'audience',
+    title: '👥 Who\'s Your Dream Customer?',
+    subtitle: 'Describe the people who love your products!',
+    placeholder: 'e.g., Young adults 18-30, Working professionals, Families',
+    emoji: '🎭',
+    funFact: 'Knowing your audience is key to amazing marketing!'
+  },
+  {
+    id: 'tone',
+    title: '🎭 What\'s Your Brand Voice?',
+    subtitle: 'How do you want to sound to your customers?',
+    placeholder: 'e.g., Trendy & Informal, Professional, Friendly & Approachable',
+    emoji: '💬',
+    funFact: 'Your tone sets the mood for all your content!'
+  },
+  {
+    id: 'region',
+    title: '🌍 Where\'s Your Market?',
+    subtitle: 'Local, national, or ready to conquer the world?',
+    placeholder: 'e.g., Pakistan, UAE, Global, North America',
+    emoji: '🗺️',
+    funFact: 'Location influences culture and buying habits!'
+  },
+  {
+    id: 'brandStyle',
+    title: '🎨 What\'s Your Visual Style?',
+    subtitle: 'Bold and minimal, or colorful and vibrant?',
+    placeholder: 'e.g., Bold & Minimal, Colorful & Vibrant, Elegant & Sophisticated',
+    emoji: '🎨',
+    funFact: 'Visual style makes your brand instantly recognizable!'
+  }
+];
+
 const Onboarding = () => {
+  const [currentStep, setCurrentStep] = useState(0);
   const [formData, setFormData] = useState({
     businessName: '',
     category: '',
@@ -150,14 +271,37 @@ const Onboarding = () => {
     region: '',
     brandStyle: '',
   });
+  const [isAnimating, setIsAnimating] = useState(false);
   const navigate = useNavigate();
+
+  const currentQuestion = questions[currentStep];
+  const clarity = Math.min(100, (Object.values(formData).filter(v => v.trim()).length / questions.length) * 100);
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  const nextStep = () => {
+    if (currentStep < questions.length - 1) {
+      setIsAnimating(true);
+      setTimeout(() => {
+        setCurrentStep(currentStep + 1);
+        setIsAnimating(false);
+      }, 300);
+    }
+  };
+
+  const prevStep = () => {
+    if (currentStep > 0) {
+      setIsAnimating(true);
+      setTimeout(() => {
+        setCurrentStep(currentStep - 1);
+        setIsAnimating(false);
+      }, 300);
+    }
+  };
+
+  const handleSubmit = async () => {
     const user = auth.currentUser;
     if (user) {
       try {
@@ -175,93 +319,70 @@ const Onboarding = () => {
       <BackLink onClick={() => window.history.back()}>
         ← Back
       </BackLink>
-      <Card>
-        <Title>🎯 Let's Get Started</Title>
-        <Subtitle>
-          Tell us about your business so we can create personalized, high-converting content for your products.
-        </Subtitle>
 
-        <ProgressBar>
-          <ProgressFill />
-        </ProgressBar>
+      <Header>
+        <h1 style={{ fontSize: '2.5em', marginBottom: '10px' }}>🎯 Let's Get Started!</h1>
+        <p style={{ fontSize: '1.2em', opacity: 0.9 }}>Tell us about your business so we can create personalized, high-converting content for your products.</p>
+      </Header>
 
-        <Form onSubmit={handleSubmit}>
-          <InputGroup>
-            <Label htmlFor="businessName">🏢 Business Name</Label>
-            <Input
-              id="businessName"
-              name="businessName"
-              placeholder="e.g., Urban Threads, TechHub, GreenLife"
-              value={formData.businessName}
-              onChange={handleChange}
-              required
-            />
-          </InputGroup>
+      <ProgressContainer>
+        {questions.map((_, index) => (
+          <React.Fragment key={index}>
+            <StepIndicator
+              active={index === currentStep}
+              completed={index < currentStep}
+            >
+              {index < currentStep ? '✓' : index + 1}
+            </StepIndicator>
+            {index < questions.length - 1 && (
+              <ProgressLine progress={index < currentStep ? 100 : index === currentStep ? 50 : 0} />
+            )}
+          </React.Fragment>
+        ))}
+      </ProgressContainer>
 
-          <InputGroup>
-            <Label htmlFor="category">📦 Product Category</Label>
-            <Input
-              id="category"
-              name="category"
-              placeholder="e.g., Fashion & Apparel, Electronics, Home & Garden"
-              value={formData.category}
-              onChange={handleChange}
-              required
-            />
-          </InputGroup>
+      <ClarityIndicator>
+        💡 Idea Clarity: {Math.round(clarity)}%
+        <ClarityBar clarity={clarity} />
+      </ClarityIndicator>
 
-          <InputGroup>
-            <Label htmlFor="audience">👥 Target Audience</Label>
-            <Input
-              id="audience"
-              name="audience"
-              placeholder="e.g., Young adults 18-30, Working professionals, Families"
-              value={formData.audience}
-              onChange={handleChange}
-              required
-            />
-          </InputGroup>
+      <Card key={currentStep} style={{ animation: isAnimating ? `${slideOut} 0.3s ease-out` : `${slideIn} 0.5s ease-out` }}>
+        <div style={{ textAlign: 'center', marginBottom: '20px' }}>
+          <span style={{ fontSize: '3em' }}>{currentQuestion.emoji}</span>
+        </div>
 
-          <InputGroup>
-            <Label htmlFor="tone">🎭 Brand Tone</Label>
-            <Input
-              id="tone"
-              name="tone"
-              placeholder="e.g., Trendy & Informal, Professional, Friendly & Approachable"
-              value={formData.tone}
-              onChange={handleChange}
-              required
-            />
-          </InputGroup>
+        <QuestionTitle>{currentQuestion.title}</QuestionTitle>
+        <QuestionSubtitle>{currentQuestion.subtitle}</QuestionSubtitle>
 
-          <InputGroup>
-            <Label htmlFor="region">🌍 Region / Market</Label>
-            <Input
-              id="region"
-              name="region"
-              placeholder="e.g., Pakistan, UAE, Global, North America"
-              value={formData.region}
-              onChange={handleChange}
-              required
-            />
-          </InputGroup>
+        <InputGroup>
+          <Input
+            id={currentQuestion.id}
+            name={currentQuestion.id}
+            placeholder={currentQuestion.placeholder}
+            value={formData[currentQuestion.id]}
+            onChange={handleChange}
+            required
+          />
+        </InputGroup>
 
-          <InputGroup>
-            <Label htmlFor="brandStyle">🎨 Brand Style</Label>
-            <Input
-              id="brandStyle"
-              name="brandStyle"
-              placeholder="e.g., Bold & Minimal, Colorful & Vibrant, Elegant & Sophisticated"
-              value={formData.brandStyle}
-              onChange={handleChange}
-              required
-            />
-          </InputGroup>
+        <p style={{ textAlign: 'center', color: '#888', fontSize: '0.9em', marginTop: '10px' }}>
+          {currentQuestion.funFact}
+        </p>
 
-          <Button type="submit">
-            🚀 Complete Setup & Start Creating
-          </Button>
-        </Form>
+        <ButtonGroup>
+          <NavButton onClick={prevStep} disabled={currentStep === 0}>
+            ← Previous
+          </NavButton>
+          {currentStep === questions.length - 1 ? (
+            <NavButton primary onClick={handleSubmit} disabled={!formData[currentQuestion.id].trim()}>
+              🚀 Complete Setup
+            </NavButton>
+          ) : (
+            <NavButton primary onClick={nextStep} disabled={!formData[currentQuestion.id].trim()}>
+              Next →
+            </NavButton>
+          )}
+        </ButtonGroup>
       </Card>
     </Container>
   );
