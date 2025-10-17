@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { doc, getDoc, addDoc, collection } from 'firebase/firestore';
-import { db, auth } from '../../firebase/config';
+import { ref, get, push, set } from 'firebase/database';
+import { database, auth } from '../../firebase/config';
 import { generateDescription } from '../../utils/openai';
 import styled from 'styled-components';
 
@@ -207,10 +207,10 @@ const Generator = () => {
       const user = auth.currentUser;
       if (user) {
         try {
-          const docRef = doc(db, 'profiles', user.uid);
-          const docSnap = await getDoc(docRef);
-          if (docSnap.exists()) {
-            setBusinessInfo(docSnap.data());
+          const profileRef = ref(database, `profiles/${user.uid}`);
+          const snapshot = await get(profileRef);
+          if (snapshot.exists()) {
+            setBusinessInfo(snapshot.val());
           } else {
             // Profile doesn't exist, redirect to onboarding
             console.log('Profile not found, redirecting to onboarding');
@@ -244,11 +244,13 @@ const Generator = () => {
     const user = auth.currentUser;
     if (user && output) {
       try {
-        await addDoc(collection(db, 'outputs', user.uid, 'generated_docs'), {
+        const outputsRef = ref(database, `outputs/${user.uid}/generated_docs`);
+        const newOutputRef = push(outputsRef);
+        await set(newOutputRef, {
           productName,
           features,
           generatedText: output,
-          timestamp: new Date(),
+          timestamp: Date.now(),
         });
         alert('Saved!');
       } catch (error) {

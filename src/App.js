@@ -1,8 +1,8 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { onAuthStateChanged } from 'firebase/auth';
-import { doc, getDoc, disableNetwork, enableNetwork } from 'firebase/firestore';
-import { auth, db } from './firebase/config';
+import { ref, get } from 'firebase/database';
+import { auth, database } from './firebase/config';
 import Landing from './pages/Landing';
 import Login from './pages/Login';
 import Register from './pages/Register';
@@ -15,7 +15,7 @@ function App() {
   const [user, setUser] = React.useState(null);
   const [loading, setLoading] = React.useState(true);
   const [userProfile, setUserProfile] = React.useState(null);
-  const [firestoreError, setFirestoreError] = React.useState(false);
+  const [databaseError, setDatabaseError] = React.useState(false);
 
   React.useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
@@ -24,32 +24,22 @@ function App() {
       if (user) {
         // Check if user has completed onboarding
         try {
-          // Try to enable network if it was disabled
-          await enableNetwork(db);
-
-          const docRef = doc(db, 'profiles', user.uid);
-          const docSnap = await getDoc(docRef);
-          if (docSnap.exists()) {
-            setUserProfile(docSnap.data());
+          const profileRef = ref(database, `profiles/${user.uid}`);
+          const snapshot = await get(profileRef);
+          if (snapshot.exists()) {
+            setUserProfile(snapshot.val());
           } else {
             setUserProfile(null); // No profile, needs onboarding
           }
-          setFirestoreError(false);
+          setDatabaseError(false);
         } catch (error) {
           console.error('Error checking profile:', error);
-          setFirestoreError(true);
-          // If Firestore is having issues, disable network to stop reconnection attempts
-          try {
-            await disableNetwork(db);
-          } catch (disableError) {
-            console.error('Error disabling network:', disableError);
-          }
-          // For onboarding, we can proceed without Firestore data
+          setDatabaseError(true);
           setUserProfile(null);
         }
       } else {
         setUserProfile(null);
-        setFirestoreError(false);
+        setDatabaseError(false);
       }
 
       setLoading(false);
@@ -89,7 +79,7 @@ function App() {
             🌙
           </div>
           <div>Loading Lunexa AI...</div>
-          {firestoreError && (
+          {databaseError && (
             <div style={{
               marginTop: '20px',
               color: '#ff6b6b',

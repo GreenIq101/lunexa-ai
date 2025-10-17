@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { collection, getDocs, deleteDoc, doc } from 'firebase/firestore';
-import { db, auth } from '../../firebase/config';
+import { ref, get, remove } from 'firebase/database';
+import { database, auth } from '../../firebase/config';
 import styled from 'styled-components';
 
 const Container = styled.div`
@@ -167,9 +167,14 @@ const Saved = () => {
       const user = auth.currentUser;
       if (user) {
         try {
-          const querySnapshot = await getDocs(collection(db, 'outputs', user.uid, 'generated_docs'));
-          const data = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-          setOutputs(data);
+          const outputsRef = ref(database, `outputs/${user.uid}/generated_docs`);
+          const snapshot = await get(outputsRef);
+          if (snapshot.exists()) {
+            const data = Object.entries(snapshot.val()).map(([id, value]) => ({ id, ...value }));
+            setOutputs(data);
+          } else {
+            setOutputs([]);
+          }
         } catch (error) {
           console.error('Error fetching outputs:', error);
           alert('Error loading saved outputs. Please check your connection.');
@@ -183,7 +188,8 @@ const Saved = () => {
     const user = auth.currentUser;
     if (user) {
       try {
-        await deleteDoc(doc(db, 'outputs', user.uid, 'generated_docs', id));
+        const outputRef = ref(database, `outputs/${user.uid}/generated_docs/${id}`);
+        await remove(outputRef);
         setOutputs(outputs.filter(output => output.id !== id));
       } catch (error) {
         console.error('Error deleting output:', error);

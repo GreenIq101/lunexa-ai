@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { doc, getDoc, updateDoc } from 'firebase/firestore';
-import { db, auth } from '../firebase/config';
+import { ref, get, update } from 'firebase/database';
+import { database, auth } from '../firebase/config';
 import { signOut } from 'firebase/auth';
 import { useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
@@ -139,10 +139,10 @@ const Settings = () => {
       const user = auth.currentUser;
       if (user) {
         try {
-          const docRef = doc(db, 'profiles', user.uid);
-          const docSnap = await getDoc(docRef);
-          if (docSnap.exists()) {
-            setFormData(docSnap.data());
+          const profileRef = ref(database, `profiles/${user.uid}`);
+          const snapshot = await get(profileRef);
+          if (snapshot.exists()) {
+            setFormData(snapshot.val());
           } else {
             // Profile doesn't exist yet, show empty form
             console.log('Profile not found, showing empty form');
@@ -166,7 +166,8 @@ const Settings = () => {
     const user = auth.currentUser;
     if (user) {
       try {
-        await updateDoc(doc(db, 'profiles', user.uid), formData);
+        const profileRef = ref(database, `profiles/${user.uid}`);
+        await update(profileRef, formData);
         alert('Profile updated!');
       } catch (error) {
         console.error('Error updating profile:', error);

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { doc, setDoc, enableNetwork, disableNetwork } from 'firebase/firestore';
-import { db, auth } from '../firebase/config';
+import { ref, set } from 'firebase/database';
+import { database, auth } from '../firebase/config';
 import { useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
 
@@ -306,18 +306,11 @@ const Onboarding = () => {
     if (user) {
       setIsSubmitting(true);
       try {
-        // Try to enable network before saving
-        await enableNetwork(db);
-        await setDoc(doc(db, 'profiles', user.uid), formData);
+        const profileRef = ref(database, `profiles/${user.uid}`);
+        await set(profileRef, formData);
         navigate('/dashboard');
       } catch (error) {
         console.error('Error saving profile:', error);
-        // If saving fails, try to disable network to prevent further connection attempts
-        try {
-          await disableNetwork(db);
-        } catch (disableError) {
-          console.error('Error disabling network:', disableError);
-        }
         // For now, just navigate to dashboard - we'll handle offline mode
         console.log('Saving failed, proceeding to dashboard anyway');
         navigate('/dashboard');
