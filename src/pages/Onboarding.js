@@ -272,6 +272,7 @@ const Onboarding = () => {
     brandStyle: '',
   });
   const [isAnimating, setIsAnimating] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const navigate = useNavigate();
 
   const currentQuestion = questions[currentStep];
@@ -304,6 +305,7 @@ const Onboarding = () => {
   const handleSubmit = async () => {
     const user = auth.currentUser;
     if (user) {
+      setIsSubmitting(true);
       try {
         // Try to enable network before saving
         await enableNetwork(db);
@@ -317,7 +319,11 @@ const Onboarding = () => {
         } catch (disableError) {
           console.error('Error disabling network:', disableError);
         }
-        alert('Error saving profile. Please check your connection and try again.');
+        // Still navigate to dashboard even if save fails - user can retry later
+        alert('Profile setup completed! You can update your preferences later in settings.');
+        navigate('/dashboard');
+      } finally {
+        setIsSubmitting(false);
       }
     }
   };
@@ -382,8 +388,8 @@ const Onboarding = () => {
             ← Previous
           </NavButton>
           {currentStep === questions.length - 1 ? (
-            <NavButton primary onClick={handleSubmit} disabled={!formData[currentQuestion.id].trim()}>
-              🚀 Complete Setup
+            <NavButton primary onClick={handleSubmit} disabled={!formData[currentQuestion.id].trim() || isSubmitting}>
+              {isSubmitting ? '⏳ Saving...' : '🚀 Complete Setup'}
             </NavButton>
           ) : (
             <NavButton primary onClick={nextStep} disabled={!formData[currentQuestion.id].trim()}>

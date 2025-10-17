@@ -44,6 +44,7 @@ function App() {
           } catch (disableError) {
             console.error('Error disabling network:', disableError);
           }
+          // For onboarding, we can proceed without Firestore data
           setUserProfile(null);
         }
       } else {
