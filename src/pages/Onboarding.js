@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { doc, setDoc, enableNetwork, disableNetwork } from 'firebase/firestore';
 import { db, auth } from '../firebase/config';
 import { useNavigate } from 'react-router-dom';
-import styled, { keyframes, css } from 'styled-components';
+import styled, { keyframes } from 'styled-components';
 
 const Container = styled.div`
   min-height: 100vh;
@@ -118,7 +118,7 @@ const Card = styled.div`
   padding: 40px;
   width: 100%;
   max-width: 500px;
-  animation: ${css`${slideIn} 0.5s ease-out`};
+  animation: slideIn 0.5s ease-out;
   position: relative;
 `;
 
