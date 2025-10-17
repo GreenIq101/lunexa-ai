@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { doc, setDoc, enableNetwork, disableNetwork } from 'firebase/firestore';
 import { db, auth } from '../firebase/config';
 import { useNavigate } from 'react-router-dom';
-import styled, { keyframes } from 'styled-components';
+import styled from 'styled-components';
 
 const Container = styled.div`
   min-height: 100vh;
@@ -89,27 +89,6 @@ const ClarityBar = styled.div`
   }
 `;
 
-const slideIn = keyframes`
-  from {
-    opacity: 0;
-    transform: translateX(50px);
-  }
-  to {
-    opacity: 1;
-    transform: translateX(0);
-  }
-`;
-
-const slideOut = keyframes`
-  from {
-    opacity: 1;
-    transform: translateX(0);
-  }
-  to {
-    opacity: 0;
-    transform: translateX(-50px);
-  }
-`;
 
 const Card = styled.div`
   background: white;
@@ -118,8 +97,18 @@ const Card = styled.div`
   padding: 40px;
   width: 100%;
   max-width: 500px;
-  animation: slideIn 0.5s ease-out;
   position: relative;
+  transition: all 0.3s ease;
+
+  &.slide-in {
+    opacity: 1;
+    transform: translateX(0);
+  }
+
+  &.slide-out {
+    opacity: 0;
+    transform: translateX(-50px);
+  }
 `;
 
 const QuestionTitle = styled.h2`
@@ -381,11 +370,7 @@ const Onboarding = () => {
         <ClarityBar clarity={clarity} />
       </ClarityIndicator>
 
-      <Card key={currentStep} style={{
-        animation: isAnimating
-          ? `${slideOut} 0.3s ease-out`
-          : `${slideIn} 0.5s ease-out`
-      }}>
+      <Card key={currentStep} className={isAnimating ? 'slide-out' : 'slide-in'}>
         <div style={{ textAlign: 'center', marginBottom: '20px' }}>
           <span style={{ fontSize: '3em' }}>{currentQuestion.emoji}</span>
         </div>
