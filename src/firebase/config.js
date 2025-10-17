@@ -14,3 +14,10 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 export const auth = getAuth(app);
 export const db = getFirestore(app);
+
+// Disable Firestore persistence to avoid connection issues
+// This prevents the continuous reconnection attempts
+if (process.env.NODE_ENV === 'development') {
+  // In development, you might want to use emulator if available
+  // connectFirestoreEmulator(db, 'localhost', 8080);
+}

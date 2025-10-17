@@ -1,7 +1,7 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { onAuthStateChanged } from 'firebase/auth';
-import { doc, getDoc } from 'firebase/firestore';
+import { doc, getDoc, disableNetwork, enableNetwork } from 'firebase/firestore';
 import { auth, db } from './firebase/config';
 import Landing from './pages/Landing';
 import Login from './pages/Login';
@@ -15,6 +15,7 @@ function App() {
   const [user, setUser] = React.useState(null);
   const [loading, setLoading] = React.useState(true);
   const [userProfile, setUserProfile] = React.useState(null);
+  const [firestoreError, setFirestoreError] = React.useState(false);
 
   React.useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
@@ -23,6 +24,9 @@ function App() {
       if (user) {
         // Check if user has completed onboarding
         try {
+          // Try to enable network if it was disabled
+          await enableNetwork(db);
+
           const docRef = doc(db, 'profiles', user.uid);
           const docSnap = await getDoc(docRef);
           if (docSnap.exists()) {
@@ -30,14 +34,21 @@ function App() {
           } else {
             setUserProfile(null); // No profile, needs onboarding
           }
+          setFirestoreError(false);
         } catch (error) {
           console.error('Error checking profile:', error);
-          // Don't set userProfile to null on error, keep trying
-          // This prevents infinite loops when Firestore is temporarily unavailable
+          setFirestoreError(true);
+          // If Firestore is having issues, disable network to stop reconnection attempts
+          try {
+            await disableNetwork(db);
+          } catch (disableError) {
+            console.error('Error disabling network:', disableError);
+          }
           setUserProfile(null);
         }
       } else {
         setUserProfile(null);
+        setFirestoreError(false);
       }
 
       setLoading(false);
@@ -65,6 +76,15 @@ function App() {
             🌙
           </div>
           <div>Loading Lunexa AI...</div>
+          {firestoreError && (
+            <div style={{
+              marginTop: '20px',
+              color: '#ff6b6b',
+              fontSize: '0.9em'
+            }}>
+              ⚠️ Connection issues detected. Some features may be limited.
+            </div>
+          )}
         </div>
       </div>
     );

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { doc, setDoc } from 'firebase/firestore';
+import { doc, setDoc, enableNetwork, disableNetwork } from 'firebase/firestore';
 import { db, auth } from '../firebase/config';
 import { useNavigate } from 'react-router-dom';
 import styled, { keyframes } from 'styled-components';
@@ -305,10 +305,18 @@ const Onboarding = () => {
     const user = auth.currentUser;
     if (user) {
       try {
+        // Try to enable network before saving
+        await enableNetwork(db);
         await setDoc(doc(db, 'profiles', user.uid), formData);
         navigate('/dashboard');
       } catch (error) {
         console.error('Error saving profile:', error);
+        // If saving fails, try to disable network to prevent further connection attempts
+        try {
+          await disableNetwork(db);
+        } catch (disableError) {
+          console.error('Error disabling network:', disableError);
+        }
         alert('Error saving profile. Please check your connection and try again.');
       }
     }
