@@ -309,7 +309,7 @@ const Onboarding = () => {
         navigate('/dashboard');
       } catch (error) {
         console.error('Error saving profile:', error);
-        alert('Error saving profile. Please check your connection.');
+        alert('Error saving profile. Please check your connection and try again.');
       }
     }
   };

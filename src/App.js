@@ -32,6 +32,8 @@ function App() {
           }
         } catch (error) {
           console.error('Error checking profile:', error);
+          // Don't set userProfile to null on error, keep trying
+          // This prevents infinite loops when Firestore is temporarily unavailable
           setUserProfile(null);
         }
       } else {
